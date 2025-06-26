@@ -175,3 +175,18 @@ cython_debug/
 
 *.parquet
 .vscode/
+
+# Cursor editor caches
+.cursor/
+.cursor_cache/
+
+# Jupyter cache directories
+.jupyter/
+.jupyter_cache/
+jupyter_cache/
+
+# Local fine-tuning checkpoints
+sft_ckpts/
+
+# Graph JSON outputs
+graph_files/

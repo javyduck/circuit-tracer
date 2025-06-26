@@ -109,11 +109,47 @@ class ReplacementModel(HookedTransformer):
         Returns:
             ReplacementModel: The loaded ReplacementModel
         """
+        import os
+
+        is_local_path = os.path.isdir(model_name) or model_name.startswith("./") or model_name.startswith("../")
+
+        hf_model_obj = None
+        model_name_for_tlens = model_name
+
+        if is_local_path:
+            from transformers import AutoModelForCausalLM
+
+            try:
+                hf_model_obj = AutoModelForCausalLM.from_pretrained(
+                    model_name,
+                    trust_remote_code=True,
+                    torch_dtype=kwargs.get("dtype", torch.float32),
+                    device_map={"": "cpu"},
+                    low_cpu_mem_usage=True,
+                )
+                if hasattr(hf_model_obj.config, "_name_or_path"):
+                    model_name_for_tlens = hf_model_obj.config._name_or_path
+            except Exception as e:
+                raise RuntimeError(f"Failed to load local HF model at {model_name}: {e}")
+
+        if is_local_path and hf_model_obj is not None:
+            # Heuristic: map Gemma finetunes back to their base model name
+            mtype = getattr(hf_model_obj.config, "model_type", "")
+            n_layers = getattr(hf_model_obj.config, "num_hidden_layers", None)
+            if mtype == "gemma2":
+                if n_layers == 26:
+                    model_name_for_tlens = "google/gemma-2-2b-it"
+                elif n_layers == 28:
+                    model_name_for_tlens = "google/gemma-2-9b-it"
+                elif n_layers == 32:
+                    model_name_for_tlens = "google/gemma-2-27b-it"
+        
         model = super().from_pretrained(
-            model_name,
+            model_name_for_tlens,
             fold_ln=False,
             center_writing_weights=False,
             center_unembed=False,
+            hf_model=hf_model_obj,
             **kwargs,
         )
         model._configure_replacement_model(
