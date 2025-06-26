@@ -190,3 +190,6 @@ sft_ckpts/
 
 # Graph JSON outputs
 graph_files/
+
+# Additional graph directories
+graphs/
