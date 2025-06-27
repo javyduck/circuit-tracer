@@ -186,7 +186,7 @@ cython_debug/
 jupyter_cache/
 
 # Local fine-tuning checkpoints
-sft_ckpts/
+sft_ckpts*/
 
 # Graph JSON outputs
 graph_files/
